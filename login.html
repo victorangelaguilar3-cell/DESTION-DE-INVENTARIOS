@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Acceso – Inventario Escolar</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e4e4e4;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    }
+
+    .logo-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 2rem;
+    }
+
+    .logo-icon {
+      width: 56px;
+      height: 56px;
+      background: #E1F5EE;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: #1D9E75;
+    }
+
+    .logo-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a2e;
+      text-align: center;
+    }
+
+    .logo-sub {
+      font-size: 13px;
+      color: #888;
+      text-align: center;
+      margin-top: -6px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap i {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 17px;
+      color: #bbb;
+      pointer-events: none;
+    }
+
+    .input-wrap .toggle-pass {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 17px;
+      color: #bbb;
+      cursor: pointer;
+      pointer-events: all;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 9px 36px 9px 36px;
+      font-size: 14px;
+      border: 1px solid #ddd;
+      border-radius: 9px;
+      outline: none;
+      color: #1a1a2e;
+      background: #fafafa;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      border-color: #1D9E75;
+      background: #fff;
+    }
+
+    .error-msg {
+      display: none;
+      background: #FCEBEB;
+      color: #A32D2D;
+      font-size: 12px;
+      border-radius: 8px;
+      padding: 9px 12px;
+      margin-bottom: 14px;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .error-msg.show { display: flex; }
+
+    .btn-login {
+      width: 100%;
+      padding: 11px;
+      font-size: 14px;
+      font-weight: 600;
+      background: #1D9E75;
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-login:hover { background: #0F6E56; }
+    .btn-login:active { transform: scale(0.98); }
+
+    .hint {
+      font-size: 11px;
+      color: #bbb;
+      text-align: center;
+      margin-top: 1.25rem;
+    }
+
+    .hint span { color: #1D9E75; font-weight: 600; }
+
+    .shake {
+      animation: shake 0.4s ease;
+    }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%      { transform: translateX(-6px); }
+      40%      { transform: translateX(6px); }
+      60%      { transform: translateX(-4px); }
+      80%      { transform: translateX(4px); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <div class="logo-wrap">
+    <div class="logo-icon"><i class="ti ti-school" aria-hidden="true"></i></div>
+    <div class="logo-title">Inventario Escolar</div>
+    <div class="logo-sub">Acceso para administrador</div>
+  </div>
+
+  <div class="error-msg" id="error-msg">
+    <i class="ti ti-alert-circle"></i>
+    <span id="error-text">Usuario o contraseña incorrectos.</span>
+  </div>
+
+  <div class="form-group">
+    <label for="username">Usuario</label>
+    <div class="input-wrap">
+      <i class="ti ti-user" aria-hidden="true"></i>
+      <input type="text" id="username" placeholder="Ej: admin" autocomplete="username" />
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="password">Contraseña</label>
+    <div class="input-wrap">
+      <i class="ti ti-lock" aria-hidden="true"></i>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+      <i class="ti ti-eye toggle-pass" id="toggle-pass" onclick="togglePass()" title="Mostrar/ocultar"></i>
+    </div>
+  </div>
+
+  <button class="btn-login" onclick="doLogin()">
+    <i class="ti ti-login" aria-hidden="true"></i> Ingresar
+  </button>
+
+  <p class="hint">Credenciales por defecto: <span>admin</span> / <span>admin123</span></p>
+</div>
+
+<script>
+  // ─── Credenciales locales ────────────────────────────────────────
+  // Cambia estos valores para personalizar el acceso.
+  const CREDENTIALS = {
+    username: 'admin',
+    password: 'admin123',
+  };
+  // ─────────────────────────────────────────────────────────────────
+
+  // Si ya hay sesión activa, ir directo al inventario
+  if (sessionStorage.getItem('inv_auth') === '1') {
+    window.location.href = 'index.html';
+  }
+
+  function doLogin() {
+    const user = document.getElementById('username').value.trim();
+    const pass = document.getElementById('password').value;
+    const card = document.getElementById('card');
+    const err  = document.getElementById('error-msg');
+
+    if (user === CREDENTIALS.username && pass === CREDENTIALS.password) {
+      sessionStorage.setItem('inv_auth', '1');
+      window.location.href = 'index.html';
+    } else {
+      err.classList.add('show');
+      card.classList.remove('shake');
+      void card.offsetWidth; // reinicia la animación
+      card.classList.add('shake');
+    }
+  }
+
+  function togglePass() {
+    const inp  = document.getElementById('password');
+    const icon = document.getElementById('toggle-pass');
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      icon.classList.replace('ti-eye', 'ti-eye-off');
+    } else {
+      inp.type = 'password';
+      icon.classList.replace('ti-eye-off', 'ti-eye');
+    }
+  }
+
+  // Permitir Enter para iniciar sesión
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+</script>
+</body>
+</html>

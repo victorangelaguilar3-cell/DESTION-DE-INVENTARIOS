@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Inventario Escolar – Primaria</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+</head>
+<body>
+
+<script>
+  // Protección de sesión: redirige al login si no hay sesión activa
+  if (sessionStorage.getItem('inv_auth') !== '1') {
+    window.location.href = 'login.html';
+  }
+</script>
+
+<div class="app">
+
+  <!-- ENCABEZADO -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">
+        <i class="ti ti-school" aria-hidden="true"></i>
+      </div>
+      <div>
+        <div class="title">Inventario Escolar</div>
+        <div class="subtitle">Escuela Primaria</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="tabs">
+        <button class="tab active" onclick="setTab('inventario', this)">Inventario</button>
+        <button class="tab" onclick="setTab('movimientos', this)">Movimientos</button>
+        <button class="tab" onclick="setTab('alertas', this)">Alertas</button>
+      </div>
+      <button class="btn" onclick="cerrarSesion()" title="Cerrar sesión" style="color:#A32D2D;border-color:#f5c6c6">
+        <i class="ti ti-logout" aria-hidden="true"></i> Salir
+      </button>
+    </div>
+  </div>
+
+  <!-- TAB: INVENTARIO -->
+  <div id="tab-inventario">
+    <div class="metrics" id="metrics"></div>
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <i class="ti ti-search" aria-hidden="true"></i>
+        <input class="search-input" id="search" type="text" placeholder="Buscar artículo..." oninput="renderTable()" />
+      </div>
+      <select class="filter-select" id="cat-filter" onchange="renderTable()">
+        <option value="">Todas las categorías</option>
+        <option value="Papelería">Papelería</option>
+        <option value="Limpieza">Limpieza</option>
+        <option value="Tecnología">Tecnología</option>
+        <option value="Mobiliario">Mobiliario</option>
+        <option value="Deportes">Deportes</option>
+        <option value="Cocina">Cocina</option>
+      </select>
+      <select class="filter-select" id="status-filter" onchange="renderTable()">
+        <option value="">Todos los estados</option>
+        <option value="disponible">Disponible</option>
+        <option value="bajo">Stock bajo</option>
+        <option value="agotado">Agotado</option>
+      </select>
+      <button class="btn primary" onclick="openAdd()">
+        <i class="ti ti-plus" aria-hidden="true"></i> Agregar
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:30%">Artículo</th>
+            <th style="width:16%">Categoría</th>
+            <th style="width:10%;text-align:right">Stock</th>
+            <th style="width:10%;text-align:right">Mín.</th>
+            <th style="width:14%">Ubicación</th>
+            <th style="width:12%">Estado</th>
+            <th style="width:8%">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB: MOVIMIENTOS -->
+  <div id="tab-movimientos" style="display:none">
+    <div class="mov-toolbar">
+      <div class="section-title">Historial de movimientos</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="openMov('entrada')">
+          <i class="ti ti-arrow-down-circle" aria-hidden="true"></i> Entrada
+        </button>
+        <button class="btn" onclick="openMov('salida')">
+          <i class="ti ti-arrow-up-circle" aria-hidden="true"></i> Salida
+        </button>
+      </div>
+    </div>
+    <div class="movement-list" id="mov-list"></div>
+  </div>
+
+  <!-- TAB: ALERTAS -->
+  <div id="tab-alertas" style="display:none">
+    <div class="section-title">Artículos que requieren atención</div>
+    <div id="alertas-list"></div>
+  </div>
+
+</div><!-- /.app -->
+
+<!-- MODAL: AGREGAR ARTÍCULO -->
+<div class="modal-bg" id="modal-add">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-add-title">Agregar artículo</div>
+      <button class="icon-btn" onclick="closeModal('modal-add')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nombre del artículo</label>
+      <input class="form-input" id="f-nombre" placeholder="Ej: Lápices grafito HB" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Categoría</label>
+        <select class="form-input" id="f-cat">
+          <option>Papelería</option><option>Limpieza</option>
+          <option>Tecnología</option><option>Mobiliario</option>
+          <option>Deportes</option><option>Cocina</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Unidad</label>
+        <input class="form-input" id="f-unidad" placeholder="Piezas, Cajas..." />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Cantidad inicial</label>
+        <input class="form-input" id="f-stock" type="number" min="0" value="0" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Stock mínimo</label>
+        <input class="form-input" id="f-min" type="number" min="0" value="5" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ubicación</label>
+      <input class="form-input" id="f-ubicacion" placeholder="Ej: Bodega A, Aula 3..." />
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-add')">Cancelar</button>
+      <button class="btn primary" onclick="saveItem()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: MOVIMIENTO -->
+<div class="modal-bg" id="modal-mov">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-mov-title">Registrar entrada</div>
+      <button class="icon-btn" onclick="closeModal('modal-mov')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Artículo</label>
+      <select class="form-input" id="m-item"></select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Cantidad</label>
+        <input class="form-input" id="m-qty" type="number" min="1" value="1" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Responsable</label>
+        <input class="form-input" id="m-resp" placeholder="Nombre..." />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Motivo / Notas</label>
+      <input class="form-input" id="m-nota" placeholder="Ej: Compra mensual, Préstamo aula 2..." />
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-mov')">Cancelar</button>
+      <button class="btn primary" onclick="saveMov()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDITAR ARTÍCULO -->
+<div class="modal-bg" id="modal-edit">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Editar artículo</div>
+      <button class="icon-btn" onclick="closeModal('modal-edit')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nombre</label>
+      <input class="form-input" id="e-nombre" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Categoría</label>
+        <select class="form-input" id="e-cat">
+          <option>Papelería</option><option>Limpieza</option>
+          <option>Tecnología</option><option>Mobiliario</option>
+          <option>Deportes</option><option>Cocina</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Unidad</label>
+        <input class="form-input" id="e-unidad" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Stock actual</label>
+        <input class="form-input" id="e-stock" type="number" min="0" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Stock mínimo</label>
+        <input class="form-input" id="e-min" type="number" min="0" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ubicación</label>
+      <input class="form-input" id="e-ubicacion" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-edit')">Cancelar</button>
+      <button class="btn primary" onclick="saveEdit()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
